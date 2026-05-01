@@ -15,8 +15,8 @@ Usage:
 import json
 import logging
 import os
-import pathlib
 import urllib.parse
+import urllib.request
 
 from dotenv import load_dotenv
 from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineQueryResultGame, Update
@@ -43,6 +43,9 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN: str = os.environ["BOT_TOKEN"]
 GAME_SHORT_NAME: str = os.getenv("GAME_SHORT_NAME", "dangerous_dave")
 GAME_URL: str = os.environ["GAME_URL"]
+GAMES_JSON_HOST: str = os.getenv(
+    "GAMES_JSON_HOST", "https://sunnydrake.github.io/DosZoneTelegrammApp/"
+)
 
 # Base URL of the game page (everything before the ?slug= query string).
 # Used to build links for games other than the BotFather-registered one.
@@ -52,18 +55,18 @@ GAME_PAGE_BASE_URL: str = urllib.parse.urlunparse(
 )
 
 # ---------------------------------------------------------------------------
-# Games catalog — loaded from docs/games.json (single source of truth)
+# Games catalog — fetched from GAMES_JSON_HOST/games.json
 # ---------------------------------------------------------------------------
 
-_GAMES_PATH = pathlib.Path(__file__).with_name("docs") / "games.json"
+_GAMES_JSON_URL: str = GAMES_JSON_HOST.rstrip("/") + "/games.json"
 
 
 def _load_games() -> list[dict]:
     try:
-        with open(_GAMES_PATH, encoding="utf-8") as fh:
-            return json.load(fh)
+        with urllib.request.urlopen(_GAMES_JSON_URL, timeout=10) as resp:
+            return json.loads(resp.read().decode("utf-8"))
     except Exception as exc:
-        logger.warning("Could not load games.json (%s); falling back to empty list.", exc)
+        logger.warning("Could not fetch games.json from %s (%s); falling back to empty list.", _GAMES_JSON_URL, exc)
         return []
 
 
