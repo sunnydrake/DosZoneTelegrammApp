@@ -118,27 +118,27 @@
 
   <script>
     (function () {
-      var frame    = document.getElementById('game-frame');
-      var fallback = document.getElementById('fallback');
+      var gameFrame       = document.getElementById('game-frame');
+      var fallbackElement = document.getElementById('fallback');
 
       function showFallback() {
-        frame.style.display    = 'none';
-        fallback.style.display = 'flex';
+        gameFrame.style.display       = 'none';
+        fallbackElement.style.display = 'flex';
       }
 
       // Some browsers fire 'error' on the iframe when the src is blocked.
-      frame.addEventListener('error', showFallback);
+      gameFrame.addEventListener('error', showFallback);
 
       /*
         Safety net: if the iframe hasn't produced a contentDocument after
         12 seconds the content was probably blocked by X-Frame-Options or
         a CSP header.  Show the direct-link fallback instead.
       */
-      var timer = setTimeout(function () {
+      var fallbackCheckTimer = setTimeout(function () {
         try {
           // Accessing contentDocument throws for cross-origin frames that
           // have loaded successfully, so an exception here is actually fine.
-          var doc = frame.contentDocument;
+          var doc = gameFrame.contentDocument;
           if (doc && doc.readyState === 'loading') {
             // Still loading — give it more time.
             return;
@@ -148,12 +148,12 @@
           }
         } catch (e) {
           // Cross-origin access denied → frame is loaded, we are fine.
-          clearTimeout(timer);
+          clearTimeout(fallbackCheckTimer);
         }
       }, 12000);
 
-      frame.addEventListener('load', function () {
-        clearTimeout(timer);
+      gameFrame.addEventListener('load', function () {
+        clearTimeout(fallbackCheckTimer);
       });
     }());
   </script>

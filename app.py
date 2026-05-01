@@ -53,7 +53,6 @@ def dangerous_dave():
         "game.html",
         game_title=game["title"],
         game_url=game["mobile_url"],
-        desktop_url=game["desktop_url"],
     )
 
 

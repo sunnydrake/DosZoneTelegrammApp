@@ -106,7 +106,7 @@ async def inline_query_handler(
     """Return the game as an inline result so it can be shared anywhere."""
     results = [
         InlineQueryResultGame(
-            id="dangerous_dave",
+            id=GAME_SHORT_NAME,
             game_short_name=GAME_SHORT_NAME,
         )
     ]
