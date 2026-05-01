@@ -3,7 +3,176 @@
     "slug": "dangerous-dave-in-the-haunted-mansion-1991",
     "title": "Dangerous Dave in the Haunted Mansion",
     "year": 1991,
+    "genre": "platformer",
     "icon": "👻",
     "short_name": "dangerous_dave"
+  },
+  {
+    "slug": "doom-1993",
+    "title": "DOOM",
+    "year": 1993,
+    "genre": "action",
+    "icon": "🔫"
+  },
+  {
+    "slug": "doom-ii-1994",
+    "title": "DOOM II: Hell on Earth",
+    "year": 1994,
+    "genre": "action",
+    "icon": "💀"
+  },
+  {
+    "slug": "wolfenstein-3d-1992",
+    "title": "Wolfenstein 3D",
+    "year": 1992,
+    "genre": "action",
+    "icon": "🐺"
+  },
+  {
+    "slug": "duke-nukem-3d-1996",
+    "title": "Duke Nukem 3D",
+    "year": 1996,
+    "genre": "action",
+    "icon": "💪"
+  },
+  {
+    "slug": "quake-1996",
+    "title": "Quake",
+    "year": 1996,
+    "genre": "action",
+    "icon": "⚡"
+  },
+  {
+    "slug": "prince-of-persia-1990",
+    "title": "Prince of Persia",
+    "year": 1990,
+    "genre": "platformer",
+    "icon": "🗡️"
+  },
+  {
+    "slug": "prince-of-persia-2-the-shadow-and-the-flame-1993",
+    "title": "Prince of Persia 2: The Shadow and the Flame",
+    "year": 1993,
+    "genre": "platformer",
+    "icon": "🔥"
+  },
+  {
+    "slug": "jazz-jackrabbit-1994",
+    "title": "Jazz Jackrabbit",
+    "year": 1994,
+    "genre": "platformer",
+    "icon": "🐇"
+  },
+  {
+    "slug": "commander-keen-4-secret-of-the-oracle-1991",
+    "title": "Commander Keen 4: Secret of the Oracle",
+    "year": 1991,
+    "genre": "platformer",
+    "icon": "🚀"
+  },
+  {
+    "slug": "the-lost-vikings-1992",
+    "title": "The Lost Vikings",
+    "year": 1992,
+    "genre": "platformer",
+    "icon": "🪖"
+  },
+  {
+    "slug": "lemmings-1991",
+    "title": "Lemmings",
+    "year": 1991,
+    "genre": "puzzle",
+    "icon": "🐾"
+  },
+  {
+    "slug": "disneys-aladdin-1994",
+    "title": "Disney's Aladdin",
+    "year": 1994,
+    "genre": "platformer",
+    "icon": "🧞"
+  },
+  {
+    "slug": "mortal-kombat-1993",
+    "title": "Mortal Kombat",
+    "year": 1993,
+    "genre": "fighting",
+    "icon": "🥊"
+  },
+  {
+    "slug": "mortal-kombat-ii-1994",
+    "title": "Mortal Kombat II",
+    "year": 1994,
+    "genre": "fighting",
+    "icon": "🥋"
+  },
+  {
+    "slug": "grand-theft-auto-1997",
+    "title": "Grand Theft Auto",
+    "year": 1997,
+    "genre": "action",
+    "icon": "🚗"
+  },
+  {
+    "slug": "the-need-for-speed-1995",
+    "title": "The Need for Speed",
+    "year": 1995,
+    "genre": "racing",
+    "icon": "🏎️"
+  },
+  {
+    "slug": "road-rash-1994",
+    "title": "Road Rash",
+    "year": 1994,
+    "genre": "racing",
+    "icon": "🏍️"
+  },
+  {
+    "slug": "command-and-conquer-1995",
+    "title": "Command & Conquer",
+    "year": 1995,
+    "genre": "strategy",
+    "icon": "🪖"
+  },
+  {
+    "slug": "warcraft-orcs-humans-1994",
+    "title": "Warcraft: Orcs & Humans",
+    "year": 1994,
+    "genre": "strategy",
+    "icon": "⚔️"
+  },
+  {
+    "slug": "warcraft-ii-tides-of-darkness-1995",
+    "title": "Warcraft II: Tides of Darkness",
+    "year": 1995,
+    "genre": "strategy",
+    "icon": "🏰"
+  },
+  {
+    "slug": "heroes-of-might-and-magic-ii-1996",
+    "title": "Heroes of Might and Magic II",
+    "year": 1996,
+    "genre": "strategy",
+    "icon": "🦁"
+  },
+  {
+    "slug": "dune-ii-the-building-of-a-dynasty-1992",
+    "title": "Dune II: The Building of a Dynasty",
+    "year": 1992,
+    "genre": "strategy",
+    "icon": "🏜️"
+  },
+  {
+    "slug": "x-com-ufo-defense-1994",
+    "title": "X-COM: UFO Defense",
+    "year": 1994,
+    "genre": "strategy",
+    "icon": "🛸"
+  },
+  {
+    "slug": "sim-city-2000-1993",
+    "title": "SimCity 2000",
+    "year": 1993,
+    "genre": "simulation",
+    "icon": "🏙️"
   }
 ]
