@@ -65,7 +65,16 @@
       outline-offset: 2px;
     }
 
-    #game-list .icon { font-size: 1.4rem; }
+    #game-list .icon { font-size: 1.4rem; flex-shrink: 0; }
+
+    #game-list .info { display: flex; flex-direction: column; gap: 0.15rem; }
+
+    #game-list .genre {
+      font-size: 0.78rem;
+      color: #4caf50;
+      text-transform: capitalize;
+      font-weight: 400;
+    }
 
     /* Shown while games.json is loading */
     #loading {
@@ -138,12 +147,23 @@
             icon.className   = 'icon';
             icon.textContent = game.icon || '🎮';
 
-            var label = document.createTextNode(
-              game.title + ' (' + game.year + ')'
-            );
+            var info = document.createElement('span');
+            info.className = 'info';
+
+            var label = document.createElement('span');
+            label.textContent = game.title + ' (' + game.year + ')';
+
+            info.appendChild(label);
+
+            if (game.genre) {
+              var genreTag = document.createElement('span');
+              genreTag.className   = 'genre';
+              genreTag.textContent = game.genre;
+              info.appendChild(genreTag);
+            }
 
             link.appendChild(icon);
-            link.appendChild(label);
+            link.appendChild(info);
             li.appendChild(link);
             list.appendChild(li);
           });
