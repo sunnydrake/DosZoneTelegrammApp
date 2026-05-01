@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DosZone Telegram Games</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #111;
+      color: #eee;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      color: #aaa;
+      font-size: 1rem;
+      text-align: center;
+      max-width: 400px;
+    }
+
+    /* Game list — populated dynamically from games.json */
+    #game-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    #game-list a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #eee;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+
+    #game-list a:hover,
+    #game-list a:focus {
+      background: #2a2a2a;
+      outline: 2px solid #4caf50;
+      outline-offset: 2px;
+    }
+
+    #game-list .icon { font-size: 1.4rem; }
+
+    /* Shown while games.json is loading */
+    #loading {
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    /* Shown if games.json fetch fails */
+    #error {
+      display: none;
+      color: #e57373;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    footer {
+      color: #555;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    footer a { color: #4caf50; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <h1>🕹️ DosZone Telegram Games</h1>
+
+  <p class="subtitle">Classic DOS games playable in your browser — with mobile touch controls.</p>
+
+  <p id="loading">Loading games…</p>
+  <p id="error">Could not load the game list. Please try again later.</p>
+
+  <!--
+    Game entries are inserted here by the script below.
+    To add a new game, add an entry to games.json — no HTML changes needed.
+  -->
+  <ul id="game-list"></ul>
+
+  <footer>
+    Powered by <a href="https://dos.zone" target="_blank" rel="noopener">dos.zone</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/sunnydrake/DosZoneTelegrammApp" target="_blank" rel="noopener">GitHub</a>
+  </footer>
+
+  <script>
+    (function () {
+      var list    = document.getElementById('game-list');
+      var loading = document.getElementById('loading');
+      var error   = document.getElementById('error');
+
+      fetch('games.json')
+        .then(function (r) { return r.json(); })
+        .then(function (games) {
+          loading.style.display = 'none';
+
+          if (!games.length) {
+            error.textContent   = 'No games available yet.';
+            error.style.display = 'block';
+            return;
+          }
+
+          games.forEach(function (game) {
+            var li   = document.createElement('li');
+            var link = document.createElement('a');
+            link.href = 'game.html?slug=' + encodeURIComponent(game.slug);
+
+            var icon = document.createElement('span');
+            icon.className   = 'icon';
+            icon.textContent = game.icon || '🎮';
+
+            var label = document.createTextNode(
+              game.title + ' (' + game.year + ')'
+            );
+
+            link.appendChild(icon);
+            link.appendChild(label);
+            li.appendChild(link);
+            list.appendChild(li);
+          });
+        })
+        .catch(function () {
+          loading.style.display = 'none';
+          error.style.display   = 'block';
+        });
+    }());
+  </script>
+
+</body>
+</html>
