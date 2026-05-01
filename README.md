@@ -30,7 +30,7 @@ User → /game → Bot sends game message (Telegram Games API)
 |------|---------|
 | `bot.py` | Telegram bot — handles `/start`, `/game`, `/help` and Play callbacks |
 | `docs/games.json` | **Catalog of all games** — add an entry here to add a new game |
-| `docs/game.html` | Generic full-screen iframe page — reads `?slug=` from the URL |
+| `docs/game.html` | Redirect page — reads `?slug=` and navigates to dos.zone |
 | `docs/index.html` | Game list page — fetches `games.json` and renders links dynamically |
 
 ---
@@ -71,14 +71,16 @@ pip install -r requirements.txt
 1. Open [@BotFather](https://t.me/BotFather) on Telegram.
 2. `/newbot` — create a bot, copy the **token**.
 3. `/newgame` — register a game under your bot.  
-   - **Short name**: `dangerous_dave` (or anything you prefer — this is the identifier).  
-   - **Game URL**: the base GitHub Pages URL **without** a `?slug=` param:  
-     `https://sunnydrake.github.io/DosZoneTelegrammApp/game.html`
+   BotFather will ask for:
+   - **Short name** (the `game=` identifier, e.g. `dangerous_dave`) — this is what goes into share links like `t.me/tgDosZone_bot?game=dangerous_dave`
+   - A title, description, cover photo, and optionally a GIF
 
-   > BotFather asks for a Short Name + a web page URL.  The URL you set here
-   > must match `GAME_URL` in `.env`.  You only need **one** game registration —
-   > the bot appends `?slug=<game>` per game in the Play callback, and
-   > `game.html` redirects the user to the correct dos.zone page.
+   > **BotFather does not ask for a game URL.**  The URL that Telegram opens when
+   > a user taps **Play** is provided dynamically by the bot in its
+   > `answer_callback_query` response — that's what `GAME_URL` in `.env` controls.
+   > You only need **one** game registration; the bot appends `?slug=<game>` per
+   > game in the Play callback, and `game.html` redirects the user to the correct
+   > dos.zone page.
 
 ### 4. Configure environment variables
 
@@ -87,7 +89,9 @@ cp .env.example .env
 # Edit .env and fill in BOT_TOKEN, GAME_SHORT_NAME, GAME_URL
 ```
 
-`GAME_URL` should point to the GitHub Pages game page **without** a slug:
+`GAME_URL` is the base URL the bot sends to Telegram when answering a Play
+callback (BotFather never stores this).  It should point to the GitHub Pages
+`game.html` page **without** a `?slug=` param — the bot appends the slug per game:
 
 ```
 GAME_URL=https://sunnydrake.github.io/DosZoneTelegrammApp/game.html
@@ -136,12 +140,11 @@ Adding a game only requires **two changes** — no new HTML files:
 The `slug` must match the path used on dos.zone (visible in the game's URL).  
 The `short_name` should match what you register with BotFather.
 
-### 2. Register the game with BotFather
+### 2. No BotFather changes needed
 
-* `/newgame` in BotFather — set **game URL** to  
-  `https://sunnydrake.github.io/DosZoneTelegrammApp/game.html`  
-  (no `?slug=` — the bot handles per-game routing automatically).
-* You only need **one** registration; `/game <name>` works for every game in the catalog.
+`/game <name>` works for every game already in the catalog — no additional
+BotFather registrations are required.  When the user taps **Play** the bot
+passes the correct `?slug=` URL to Telegram at callback time.
 
 The game list on `index.html` updates automatically — it always reads from `games.json`.
 
