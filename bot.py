@@ -119,7 +119,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "  /help         — Show this message\n\n"
         "Games are powered by dos.zone — a browser-based DOS emulator "
         "with built-in mobile touch controls.\n\n"
-        "You can also use me inline: type @<botname> in any chat to share a game."
+        "You can also use me inline: type @your_bot_name in any chat to share a game."
     )
 
 
@@ -187,7 +187,7 @@ async def games_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             )
         lines.append("")
 
-    lines.append("_Use /game \\<name\\> to search by title or genre._")
+    lines.append("_Tip: use /game followed by a title or genre to search\\._")
 
     await update.message.reply_text(
         "\n".join(lines),
