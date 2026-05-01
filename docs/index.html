@@ -26,14 +26,15 @@
       letter-spacing: 0.02em;
     }
 
-    p {
+    .subtitle {
       color: #aaa;
       font-size: 1rem;
       text-align: center;
       max-width: 400px;
     }
 
-    .games {
+    /* Game list — populated dynamically from games.json */
+    #game-list {
       list-style: none;
       display: flex;
       flex-direction: column;
@@ -42,7 +43,7 @@
       max-width: 380px;
     }
 
-    .games a {
+    #game-list a {
       display: flex;
       align-items: center;
       gap: 0.75rem;
@@ -57,14 +58,28 @@
       transition: background 0.15s;
     }
 
-    .games a:hover,
-    .games a:focus {
+    #game-list a:hover,
+    #game-list a:focus {
       background: #2a2a2a;
       outline: 2px solid #4caf50;
       outline-offset: 2px;
     }
 
-    .games .icon { font-size: 1.4rem; }
+    #game-list .icon { font-size: 1.4rem; }
+
+    /* Shown while games.json is loading */
+    #loading {
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    /* Shown if games.json fetch fails */
+    #error {
+      display: none;
+      color: #e57373;
+      font-size: 0.95rem;
+      text-align: center;
+    }
 
     footer {
       color: #555;
@@ -80,22 +95,65 @@
 
   <h1>🕹️ DosZone Telegram Games</h1>
 
-  <p>Classic DOS games playable in your browser — with mobile touch controls.</p>
+  <p class="subtitle">Classic DOS games playable in your browser — with mobile touch controls.</p>
 
-  <ul class="games">
-    <li>
-      <a href="dangerous-dave.html">
-        <span class="icon">👻</span>
-        Dangerous Dave in the Haunted Mansion (1991)
-      </a>
-    </li>
-  </ul>
+  <p id="loading">Loading games…</p>
+  <p id="error">Could not load the game list. Please try again later.</p>
+
+  <!--
+    Game entries are inserted here by the script below.
+    To add a new game, add an entry to games.json — no HTML changes needed.
+  -->
+  <ul id="game-list"></ul>
 
   <footer>
     Powered by <a href="https://dos.zone" target="_blank" rel="noopener">dos.zone</a>
     &nbsp;·&nbsp;
     <a href="https://github.com/sunnydrake/DosZoneTelegrammApp" target="_blank" rel="noopener">GitHub</a>
   </footer>
+
+  <script>
+    (function () {
+      var list    = document.getElementById('game-list');
+      var loading = document.getElementById('loading');
+      var error   = document.getElementById('error');
+
+      fetch('games.json')
+        .then(function (r) { return r.json(); })
+        .then(function (games) {
+          loading.style.display = 'none';
+
+          if (!games.length) {
+            error.textContent   = 'No games available yet.';
+            error.style.display = 'block';
+            return;
+          }
+
+          games.forEach(function (game) {
+            var li   = document.createElement('li');
+            var link = document.createElement('a');
+            link.href = 'game.html?slug=' + encodeURIComponent(game.slug);
+
+            var icon = document.createElement('span');
+            icon.className   = 'icon';
+            icon.textContent = game.icon || '🎮';
+
+            var label = document.createTextNode(
+              game.title + ' (' + game.year + ')'
+            );
+
+            link.appendChild(icon);
+            link.appendChild(label);
+            li.appendChild(link);
+            list.appendChild(li);
+          });
+        })
+        .catch(function () {
+          loading.style.display = 'none';
+          error.style.display   = 'block';
+        });
+    }());
+  </script>
 
 </body>
 </html>

@@ -3,7 +3,8 @@
 Bring classic DOS browser emulation from [dos.zone](https://dos.zone) into Telegram.  
 Players tap **Play** inside any Telegram chat and immediately get the game running with **mobile-friendly touch controls** — no installation required.
 
-The first supported game is **[Dangerous Dave in the Haunted Mansion (1991)](https://dos.zone/dangerous-dave-in-the-haunted-mansion-1991/)**.
+The game pages are **static HTML hosted on GitHub Pages** — no web server needed.  
+The only process you need to run is `bot.py`.
 
 ---
 
@@ -12,18 +13,18 @@ The first supported game is **[Dangerous Dave in the Haunted Mansion (1991)](htt
 ```
 User → /game → Bot sends game message
              → User taps Play
-             → Telegram opens game web page (app.py)
-             → Page loads dos.zone /mobile/ URL in a full-screen iframe
+             → Telegram opens GitHub Pages URL  (game.html?slug=<slug>)
+             → game.html fetches games.json, finds the game, sets iframe src
+             → dos.zone /mobile/<slug>/ loads in a full-screen iframe
              → dos.zone touch controls are active on phones / tablets
 ```
-
-The project is a **thin wrapper** around dos.zone:
 
 | File | Purpose |
 |------|---------|
 | `bot.py` | Telegram bot — handles `/start`, `/game`, `/help` and Play callbacks |
-| `app.py` | Flask web server — serves the game wrapper HTML page |
-| `templates/game.html` | Full-screen iframe that embeds the dos.zone mobile game URL |
+| `docs/games.json` | **Catalog of all games** — add an entry here to add a new game |
+| `docs/game.html` | Generic full-screen iframe page — reads `?slug=` from the URL |
+| `docs/index.html` | Game list page — fetches `games.json` and renders links dynamically |
 
 ---
 
@@ -32,13 +33,23 @@ The project is a **thin wrapper** around dos.zone:
 * Python 3.10+
 * A Telegram Bot Token from [@BotFather](https://t.me/BotFather)
 * A Telegram **Game** registered with BotFather (`/newgame`)
-* A public HTTPS URL for the web server (ngrok works for local dev)
+* The `docs/` folder published via GitHub Pages (free, built-in)
 
 ---
 
 ## Setup
 
-### 1. Clone and install dependencies
+### 1. Enable GitHub Pages
+
+Go to **Settings → Pages** in this repository and set:
+
+* Source: **Deploy from a branch**
+* Branch: `main`, folder: `/docs`
+
+Your game pages will be live at:  
+`https://sunnydrake.github.io/DosZoneTelegrammApp/`
+
+### 2. Clone and install dependencies
 
 ```bash
 git clone https://github.com/sunnydrake/DosZoneTelegrammApp.git
@@ -48,48 +59,35 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Create the Telegram Bot and Game
+### 3. Create the Telegram Bot and Game
 
 1. Open [@BotFather](https://t.me/BotFather) on Telegram.
 2. `/newbot` — create a bot, copy the **token**.
 3. `/newgame` — register a game under your bot.  
    - Set the short name to `dangerous_dave` (or anything you prefer).  
-   - Set the game URL to your public server address (see step 4).
+   - Set the game URL to the GitHub Pages URL from step 1, e.g.:  
+     `https://sunnydrake.github.io/DosZoneTelegrammApp/game.html?slug=dangerous-dave-in-the-haunted-mansion-1991`
 
-### 3. Configure environment variables
+### 4. Configure environment variables
 
 ```bash
 cp .env.example .env
 # Edit .env and fill in BOT_TOKEN, GAME_SHORT_NAME, GAME_URL
 ```
 
-### 4. Expose the web server publicly (local development)
+`GAME_URL` should point to the GitHub Pages game page:
 
-Install [ngrok](https://ngrok.com) and run:
+```
+GAME_URL=https://sunnydrake.github.io/DosZoneTelegrammApp/game.html?slug=dangerous-dave-in-the-haunted-mansion-1991
+```
+
+### 5. Run the bot
 
 ```bash
-ngrok http 5000
-```
-
-Copy the `https://…ngrok-free.app` URL and set:
-
-```
-GAME_URL=https://<your-ngrok-id>.ngrok-free.app/game/dangerous-dave
-```
-
-Also update the game URL in BotFather (`/editgame → Game URL`).
-
-### 5. Run
-
-Open **two terminals**:
-
-```bash
-# Terminal 1 — web server
-python app.py
-
-# Terminal 2 — Telegram bot
 python bot.py
 ```
+
+That's it — no web server process needed.
 
 ---
 
@@ -106,38 +104,44 @@ show or hide the overlay accordingly.
 
 ## Adding more games
 
-1. Add an entry to the `GAMES` dict in `app.py`:
+Adding a game only requires **two changes** — no new HTML files:
 
-```python
-"my-game": {
-    "title": "My DOS Game (1994)",
+### 1. Add an entry to `docs/games.json`
+
+```json
+[
+  ...,
+  {
     "slug": "my-dos-game-1994",
-    "mobile_url": "https://dos.zone/mobile/my-dos-game-1994/",
-    "desktop_url": "https://dos.zone/my-dos-game-1994/",
-},
+    "title": "My DOS Game",
+    "year": 1994,
+    "icon": "🎮",
+    "short_name": "my_dos_game"
+  }
+]
 ```
 
-2. Add a Flask route in `app.py`:
+The `slug` must match the path used on dos.zone (visible in the game's URL).  
+The `short_name` should match what you register with BotFather.
 
-```python
-@app.route("/game/my-game")
-def my_game():
-    game = GAMES["my-game"]
-    return render_template("game.html",
-                           game_title=game["title"],
-                           game_url=game["mobile_url"],
-                           desktop_url=game["desktop_url"])
-```
+### 2. Register the game with BotFather and add a command handler in `bot.py`
 
-3. Register the new game with BotFather and add a `/command` handler in `bot.py`.
+* `/newgame` in BotFather — set game URL to  
+  `https://sunnydrake.github.io/DosZoneTelegrammApp/game.html?slug=my-dos-game-1994`
+* Add a `CommandHandler` in `bot.py` that calls `reply_game("my_dos_game")`.
+
+The game list on `index.html` updates automatically — it always reads from `games.json`.
 
 ---
 
-## Production deployment
+## Production deployment for the bot
 
-Deploy `app.py` to any platform that provides HTTPS
-(Render, Railway, Fly.io, Heroku, a VPS with nginx + Let's Encrypt, …).  
-Set the environment variables there and update the game URL in BotFather.
+Deploy `bot.py` to any platform that provides a persistent Python process:
 
-The bot (`bot.py`) can run on the same server or any machine with internet access.
+* [Render](https://render.com) (free tier, sleeps after inactivity)
+* [Railway](https://railway.app) ($5/mo free credit)
+* [Fly.io](https://fly.io) (free shared VMs)
+* Any VPS
+
+Set `BOT_TOKEN`, `GAME_SHORT_NAME`, and `GAME_URL` as environment variables on your host.
 

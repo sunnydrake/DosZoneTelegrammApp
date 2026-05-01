@@ -7,7 +7,7 @@ Serves classic DOS games from dos.zone through the Telegram Games API.
 Usage:
     1. Create a bot with @BotFather and obtain a token.
     2. Register a game with @BotFather using /newgame; note the short name.
-    3. Set GAME_URL to the public URL of the web server (app.py).
+    3. Set GAME_URL to the GitHub Pages game URL (see .env.example).
     4. Copy .env.example to .env, fill in the values, and run:
            python bot.py
 """
