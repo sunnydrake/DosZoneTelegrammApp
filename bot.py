@@ -1,4 +1,3 @@
-sunnydrake@tr1:/bulk_pool/Dev/tgDosZone/tgDosZone$ cat bot.py
 #!/usr/bin/env python3
 import json
 import logging
@@ -13,14 +12,13 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from dotenv import load_dotenv
 from telegram import (
-    InlineQueryResultArticle,
-    InputTextMessageContent,
     InlineQueryResultGame,
     Update
 )
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
+    ChosenInlineResultHandler,
     CommandHandler,
     ContextTypes,
     InlineQueryHandler,
@@ -160,11 +158,23 @@ async def game_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def inline_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.inline_query.query or ""
     matches = _find_games(q)[:20]
-    results = [InlineQueryResultArticle(
-        id=g["slug"], title=f"{g.get('icon', '🎮')} {g['title']}",
-        input_message_content=InputTextMessageContent(f"🎮 *{g['title']}*\n\n[▶ Play Now]({_game_url(g['slug'])})", parse_mode="Markdown")
-    ) for g in matches]
+    results = [
+        InlineQueryResultGame(id=g["slug"], game_short_name=GAME_SHORT_NAME)
+        for g in matches
+    ]
     await update.inline_query.answer(results, cache_time=300)
+
+async def chosen_inline_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Store inline_message_id → slug so callback_handler can open the right game."""
+    result = update.chosen_inline_result
+    slug = result.result_id
+    inline_message_id = result.inline_message_id
+    if inline_message_id and slug:
+        slugs = context.bot_data.setdefault('inline_slugs', {})
+        slugs[inline_message_id] = slug
+        # Prevent unbounded growth — keep only the most recent 500 entries.
+        while len(slugs) > 500:
+            slugs.pop(next(iter(slugs)))
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -172,8 +182,14 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Start with the configured default game URL.
         url = GAME_URL
         # If this message was sent for a specific searched game, override the URL.
-        if q.message and GAME_PAGE_BASE_URL:
-            slug = context.bot_data.get('game_slugs', {}).get(q.message.message_id)
+        if GAME_PAGE_BASE_URL:
+            slug = None
+            if q.inline_message_id:
+                # Callback from an inline-mode game result.
+                slug = context.bot_data.get('inline_slugs', {}).get(q.inline_message_id)
+            elif q.message:
+                # Callback from a direct /game command message.
+                slug = context.bot_data.get('game_slugs', {}).get(q.message.message_id)
             if slug:
                 url = f"{GAME_PAGE_BASE_URL}?slug={urllib.parse.quote(slug)}"
         await q.answer(url=url)
@@ -210,6 +226,7 @@ def main():
     application.add_handler(CommandHandler("game", game_command))
     application.add_handler(CommandHandler("games", games_command))
     application.add_handler(InlineQueryHandler(inline_handler))
+    application.add_handler(ChosenInlineResultHandler(chosen_inline_handler))
     application.add_handler(CallbackQueryHandler(callback_handler))
     application.add_handler(MessageHandler(filters.ALL, traffic_logger), group=1)
 
