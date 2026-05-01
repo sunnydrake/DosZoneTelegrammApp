@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!--
+    Prevent the browser from scaling or allowing pinch-zoom so the game
+    stays full-screen and the touch controls feel native.
+  -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,
+                 maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Dangerous Dave in the Haunted Mansion (1991)</title>
+
+  <style>
+    /* Reset — zero chrome so the game is truly full-screen */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: system-ui, sans-serif;
+    }
+
+    /* The iframe fills the entire viewport */
+    #game-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /*
+      Fallback overlay — hidden by default, shown if the iframe cannot load
+      (e.g. the browser blocks cross-origin iframes in certain contexts).
+    */
+    #fallback {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #111;
+      color: #eee;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      gap: 1.25rem;
+    }
+
+    #fallback h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    #fallback p {
+      font-size: 1rem;
+      color: #aaa;
+      max-width: 340px;
+    }
+
+    #fallback a {
+      display: inline-block;
+      padding: 0.75rem 2.25rem;
+      background: #4caf50;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    #fallback a:active {
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    The iframe loads the dos.zone /mobile/ URL for this game.
+    The /mobile/ path activates dos.zone's built-in on-screen touch
+    controller, making the game fully playable on phones and tablets.
+
+    allow="autoplay" is needed for the audio to work without a user gesture.
+  -->
+  <iframe
+    id="game-frame"
+    src="https://dos.zone/mobile/dangerous-dave-in-the-haunted-mansion-1991/"
+    allowfullscreen
+    allow="fullscreen; autoplay"
+    title="Dangerous Dave in the Haunted Mansion (1991)"
+  ></iframe>
+
+  <!--
+    Fallback card — displayed when the iframe cannot be shown.
+    The direct link opens the mobile game page in a new tab/window.
+  -->
+  <div id="fallback" role="alert">
+    <h1>🕹️ Dangerous Dave in the Haunted Mansion (1991)</h1>
+    <p>
+      The game could not be embedded. Tap the button below to open it
+      directly in your browser with mobile touch controls.
+    </p>
+    <a href="https://dos.zone/mobile/dangerous-dave-in-the-haunted-mansion-1991/" target="_blank" rel="noopener">
+      ▶ Play Now
+    </a>
+  </div>
+
+  <script>
+    (function () {
+      var gameFrame       = document.getElementById('game-frame');
+      var fallbackElement = document.getElementById('fallback');
+
+      function showFallback() {
+        gameFrame.style.display       = 'none';
+        fallbackElement.style.display = 'flex';
+      }
+
+      // Some browsers fire 'error' on the iframe when the src is blocked.
+      gameFrame.addEventListener('error', showFallback);
+
+      /*
+        Safety net: if the iframe hasn't produced a contentDocument after
+        12 seconds the content was probably blocked by X-Frame-Options or
+        a CSP header.  Show the direct-link fallback instead.
+      */
+      var fallbackCheckTimer = setTimeout(function () {
+        try {
+          // Accessing contentDocument throws for cross-origin frames that
+          // have loaded successfully, so an exception here is actually fine.
+          var doc = gameFrame.contentDocument;
+          if (doc && doc.readyState === 'loading') {
+            // Still loading — give it more time.
+            return;
+          }
+          if (!doc) {
+            showFallback();
+          }
+        } catch (e) {
+          // Cross-origin access denied → frame is loaded, we are fine.
+          clearTimeout(fallbackCheckTimer);
+        }
+      }, 12000);
+
+      gameFrame.addEventListener('load', function () {
+        clearTimeout(fallbackCheckTimer);
+      });
+    }());
+  </script>
+
+</body>
+</html>
