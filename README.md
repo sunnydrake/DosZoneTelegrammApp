@@ -11,13 +11,20 @@ The only process you need to run is `bot.py`.
 ## How it works
 
 ```
-User → /game → Bot sends game message
+User → /game → Bot sends game message (Telegram Games API)
              → User taps Play
-             → Telegram opens GitHub Pages URL  (game.html?slug=<slug>)
-             → game.html fetches games.json, finds the game, sets iframe src
-             → dos.zone /mobile/<slug>/ loads in a full-screen iframe
+             → Telegram sends callback_query to bot
+             → Bot answers with game.html?slug=<slug>  (GitHub Pages URL)
+             → game.html reads ?slug= and does window.location.replace()
+             → Telegram WebView navigates directly to dos.zone/mobile/<slug>/
              → dos.zone touch controls are active on phones / tablets
 ```
+
+> **Why the redirect instead of an iframe?**  
+> dos.zone sets `X-Frame-Options` / CSP headers that block it from loading
+> inside a nested `<iframe>`.  By redirecting at the top-level navigation
+> the Telegram WebView *becomes* the dos.zone page — no iframe involved —
+> so the headers don't apply and the game loads correctly.
 
 | File | Purpose |
 |------|---------|
@@ -64,9 +71,14 @@ pip install -r requirements.txt
 1. Open [@BotFather](https://t.me/BotFather) on Telegram.
 2. `/newbot` — create a bot, copy the **token**.
 3. `/newgame` — register a game under your bot.  
-   - Set the short name to `dangerous_dave` (or anything you prefer).  
-   - Set the game URL to the GitHub Pages URL from step 1, e.g.:  
-     `https://sunnydrake.github.io/DosZoneTelegrammApp/game.html?slug=dangerous-dave-in-the-haunted-mansion-1991`
+   - **Short name**: `dangerous_dave` (or anything you prefer — this is the identifier).  
+   - **Game URL**: the base GitHub Pages URL **without** a `?slug=` param:  
+     `https://sunnydrake.github.io/DosZoneTelegrammApp/game.html`
+
+   > BotFather asks for a Short Name + a web page URL.  The URL you set here
+   > must match `GAME_URL` in `.env`.  You only need **one** game registration —
+   > the bot appends `?slug=<game>` per game in the Play callback, and
+   > `game.html` redirects the user to the correct dos.zone page.
 
 ### 4. Configure environment variables
 
@@ -75,10 +87,10 @@ cp .env.example .env
 # Edit .env and fill in BOT_TOKEN, GAME_SHORT_NAME, GAME_URL
 ```
 
-`GAME_URL` should point to the GitHub Pages game page:
+`GAME_URL` should point to the GitHub Pages game page **without** a slug:
 
 ```
-GAME_URL=https://sunnydrake.github.io/DosZoneTelegrammApp/game.html?slug=dangerous-dave-in-the-haunted-mansion-1991
+GAME_URL=https://sunnydrake.github.io/DosZoneTelegrammApp/game.html
 ```
 
 ### 5. Run the bot
@@ -124,11 +136,12 @@ Adding a game only requires **two changes** — no new HTML files:
 The `slug` must match the path used on dos.zone (visible in the game's URL).  
 The `short_name` should match what you register with BotFather.
 
-### 2. Register the game with BotFather and add a command handler in `bot.py`
+### 2. Register the game with BotFather
 
-* `/newgame` in BotFather — set game URL to  
-  `https://sunnydrake.github.io/DosZoneTelegrammApp/game.html?slug=my-dos-game-1994`
-* Add a `CommandHandler` in `bot.py` that calls `reply_game("my_dos_game")`.
+* `/newgame` in BotFather — set **game URL** to  
+  `https://sunnydrake.github.io/DosZoneTelegrammApp/game.html`  
+  (no `?slug=` — the bot handles per-game routing automatically).
+* You only need **one** registration; `/game <name>` works for every game in the catalog.
 
 The game list on `index.html` updates automatically — it always reads from `games.json`.
 
