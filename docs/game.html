@@ -2,10 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!--
-    Prevent the browser from scaling or allowing pinch-zoom so the game
-    stays full-screen and the touch controls feel native.
-  -->
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0,
                  maximum-scale=1.0, user-scalable=no" />
@@ -24,50 +20,40 @@
     html, body {
       width: 100%;
       height: 100%;
-      overflow: hidden;
       background: #000;
-      font-family: system-ui, sans-serif;
-    }
-
-    /* The iframe fills the entire viewport */
-    #game-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-    }
-
-    /*
-      Fallback overlay — hidden by default, shown if the iframe cannot load
-      (e.g. the browser blocks cross-origin iframes in certain contexts),
-      or if the ?slug= parameter is missing / unknown.
-    */
-    #fallback {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: #111;
       color: #eee;
-      flex-direction: column;
+      font-family: system-ui, sans-serif;
+      display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 2rem;
-      gap: 1.25rem;
     }
 
-    #fallback h1 {
+    #loading {
+      font-size: 1.2rem;
+      color: #aaa;
+    }
+
+    #error {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 2rem;
+    }
+
+    #error h1 {
       font-size: 1.4rem;
       font-weight: 600;
     }
 
-    #fallback p {
+    #error p {
       font-size: 1rem;
       color: #aaa;
       max-width: 340px;
     }
 
-    #fallback a.play-btn {
+    #error a.play-btn {
       display: inline-block;
       padding: 0.75rem 2.25rem;
       background: #4caf50;
@@ -79,149 +65,69 @@
       letter-spacing: 0.02em;
     }
 
-    #fallback a.play-btn:active { opacity: 0.85; }
+    #error a.play-btn:active { opacity: 0.85; }
 
-    #fallback a.back-link {
+    #error a.back-link {
       font-size: 0.9rem;
       color: #4caf50;
       text-decoration: none;
     }
 
-    #fallback a.back-link:hover { text-decoration: underline; }
+    #error a.back-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
-  <!--
-    The iframe src is set by JavaScript after reading the ?slug= query
-    parameter and looking up the game in games.json.
-    The /mobile/ path activates dos.zone's built-in on-screen touch
-    controller, making the game fully playable on phones and tablets.
-    allow="autoplay" is needed for audio to work without a user gesture.
-  -->
-  <iframe
-    id="game-frame"
-    src=""
-    allowfullscreen
-    allow="fullscreen; autoplay"
-    title=""
-  ></iframe>
+  <!-- Shown for a brief moment while the redirect is being prepared -->
+  <div id="loading">🕹️ Loading game…</div>
 
   <!--
-    Fallback card — displayed when the iframe cannot be shown,
-    or when the requested slug is not found in games.json.
+    Shown only when the ?slug= parameter is missing.
+    When a valid slug is present the page immediately redirects to
+    https://dos.zone/mobile/<slug>/ so this div is never visible.
   -->
-  <div id="fallback" role="alert">
-    <h1 id="fallback-title">🕹️ Game</h1>
-    <p id="fallback-msg">
-      The game could not be embedded. Tap the button below to open it
-      directly in your browser with mobile touch controls.
-    </p>
-    <a id="fallback-link" class="play-btn" href="#" target="_blank" rel="noopener">
-      ▶ Play Now
-    </a>
+  <div id="error" role="alert">
+    <h1 id="error-title">🕹️ Game not found</h1>
+    <p id="error-msg">No game was specified. Go back and choose a game.</p>
+    <a id="direct-link" class="play-btn" href="#" target="_blank"
+       rel="noopener" style="display:none">▶ Open in Browser</a>
     <a class="back-link" href="index.html">← Back to game list</a>
   </div>
 
   <script>
     (function () {
-      var gameFrame       = document.getElementById('game-frame');
-      var fallbackElement = document.getElementById('fallback');
-      var fallbackTitle   = document.getElementById('fallback-title');
-      var fallbackMsg     = document.getElementById('fallback-msg');
-      var fallbackLink    = document.getElementById('fallback-link');
+      var slug = new URLSearchParams(window.location.search).get('slug');
 
-      function showFallback(title, gameUrl, errorMsg) {
-        if (title)    fallbackTitle.textContent = '🕹️ ' + title;
-        if (errorMsg) fallbackMsg.textContent   = errorMsg;
-        if (gameUrl) {
-          fallbackLink.href        = gameUrl;
-          fallbackLink.style.display = 'inline-block';
-        } else {
-          fallbackLink.style.display = 'none';
+      function showError(title, msg, directUrl) {
+        document.getElementById('loading').style.display = 'none';
+        var errEl = document.getElementById('error');
+        errEl.style.display = 'flex';
+        if (title) document.getElementById('error-title').textContent = '🕹️ ' + title;
+        if (msg)   document.getElementById('error-msg').textContent   = msg;
+        if (directUrl) {
+          var link = document.getElementById('direct-link');
+          link.href = directUrl;
+          link.style.display = 'inline-block';
         }
-        gameFrame.style.display       = 'none';
-        fallbackElement.style.display = 'flex';
       }
 
-      // Read the ?slug= query parameter
-      var params = new URLSearchParams(window.location.search);
-      var slug   = params.get('slug');
-
       if (!slug) {
-        showFallback(
+        showError(
           'Game not found',
-          null,
-          'No game slug was provided in the URL. Go back and choose a game.'
+          'No game slug was provided in the URL. Go back and choose a game.',
+          null
         );
         return;
       }
 
-      // Fetch the catalog and look up the requested slug
-      fetch('games.json')
-        .then(function (r) { return r.json(); })
-        .then(function (games) {
-          var game = games.find(function (g) { return g.slug === slug; });
-
-          if (!game) {
-            showFallback(
-              'Game not found',
-              null,
-              'The requested game "' + slug + '" is not in the catalog.'
-            );
-            return;
-          }
-
-          var gameUrl   = 'https://dos.zone/mobile/' + game.slug + '/';
-          var gameTitle = game.title + ' (' + game.year + ')';
-
-          // Update page title and iframe
-          document.title         = gameTitle;
-          gameFrame.title        = gameTitle;
-          gameFrame.src          = gameUrl;
-
-          // Update fallback card in case the iframe fails to load
-          fallbackTitle.textContent = '🕹️ ' + gameTitle;
-          fallbackLink.href         = gameUrl;
-
-          // Some browsers fire 'error' on the iframe when the src is blocked.
-          gameFrame.addEventListener('error', function () {
-            showFallback(gameTitle, gameUrl, null);
-          });
-
-          /*
-            Safety net: if the iframe hasn't produced a contentDocument after
-            12 seconds the content was probably blocked by X-Frame-Options or
-            a CSP header.  Show the direct-link fallback instead.
-          */
-          var fallbackCheckTimer = setTimeout(function () {
-            try {
-              // Accessing contentDocument throws for cross-origin frames that
-              // have loaded successfully, so an exception here is actually fine.
-              var doc = gameFrame.contentDocument;
-              if (doc && doc.readyState === 'loading') {
-                return; // Still loading — give it more time.
-              }
-              if (!doc) {
-                showFallback(gameTitle, gameUrl, null);
-              }
-            } catch (e) {
-              // Cross-origin access denied → frame is loaded, we are fine.
-              clearTimeout(fallbackCheckTimer);
-            }
-          }, 12000);
-
-          gameFrame.addEventListener('load', function () {
-            clearTimeout(fallbackCheckTimer);
-          });
-        })
-        .catch(function () {
-          showFallback(
-            'Error',
-            null,
-            'Could not load the game catalog. Please try again later.'
-          );
-        });
+      /*
+        Redirect directly to the dos.zone mobile page.
+        This is a top-level navigation inside Telegram's WebView, so
+        dos.zone's X-Frame-Options / CSP headers do not apply — the page
+        was previously blocked because it was loaded inside a nested iframe.
+      */
+      var dosZoneUrl = 'https://dos.zone/mobile/' + slug + '/';
+      window.location.replace(dosZoneUrl);
     }());
   </script>
 

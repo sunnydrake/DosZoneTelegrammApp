@@ -148,8 +148,14 @@ async def game_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ No games found.")
         return
     g = matches[0]
-    url = _game_url(g["slug"])
-    await update.message.reply_text(f"{g.get('icon', '🎮')} *{g['title']}* ({g['year']})\n[▶ Play Now]({url})", parse_mode="Markdown")
+    # Open the game inside the Telegram Games popup (same as the default game).
+    # Store the slug so callback_handler can route to the correct game URL.
+    sent = await update.message.reply_game(GAME_SHORT_NAME)
+    slugs = context.bot_data.setdefault('game_slugs', {})
+    slugs[sent.message_id] = g['slug']
+    # Prevent unbounded growth — keep only the most recent 500 entries.
+    while len(slugs) > 500:
+        slugs.pop(next(iter(slugs)))
 
 async def inline_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.inline_query.query or ""
@@ -162,8 +168,17 @@ async def inline_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    if q.game_short_name: await q.answer(url=GAME_URL)
-    else: await q.answer()
+    if q.game_short_name:
+        # Start with the configured default game URL.
+        url = GAME_URL
+        # If this message was sent for a specific searched game, override the URL.
+        if q.message and GAME_PAGE_BASE_URL:
+            slug = context.bot_data.get('game_slugs', {}).get(q.message.message_id)
+            if slug:
+                url = f"{GAME_PAGE_BASE_URL}?slug={urllib.parse.quote(slug)}"
+        await q.answer(url=url)
+    else:
+        await q.answer()
 
 async def traffic_logger(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Silent log to verify message arrival without leaking token or data."""
